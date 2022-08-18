@@ -329,7 +329,7 @@ if objSystem.interface=0 and dzien_teraz!=-1
                     _obj.obj_parent=id
                     _obj.wejscie="0:00"
                     _obj.wyjscie="0:00"
-                    _obj.stawka=0
+                    _obj.stawka=objSystem.ostatnio_wybrana_stawka;
                     //show_message("nowa godzina")
                     wybor_zmiany_godziny=-1
                 }

@@ -27,11 +27,11 @@
             <kind>1</kind>
             <string>///zmianne poczatkowe
 dzien_teraz=-1
-rodzaj_zmiany=0
+rodzaj_zmiany=0;
 obj_parent=id
 wejscie=""
 wyjscie=""
-stawka=0
+stawka=objSystem.ostatnio_wybrana_stawka;
 //
 msg_wejscie=-1
 msg_wyjscie=-1
@@ -111,30 +111,39 @@ if device_mouse_check_button_pressed(0,mb_left)
 if device_mouse_check_button_released(0,mb_left) and wybor_stawki=1
 {     
      var _polozenie;
-     
+     stawka_old=stawka;
     for (_i_id_stawki=0;_i_id_stawki&lt;32;_i_id_stawki++)
     {
         if _i_id_stawki mod 2 = 0 _polozenie=-1
         else _polozenie=1
         if objSystem.dane_stawka[_i_id_stawki,STAWKA_NAZWA]!=""
         {
-            if device_mouse_x(0)&gt;-global.szer*7+global.szer*7+global.szer*1.5 and device_mouse_x(0)&lt;-global.szer*7+global.szer*7+global.szer*5.5 and 
-                device_mouse_y(0)&gt;global.wys*4+((1+_i_id_stawki) div 2 *global.wys*0.75)*_polozenie and device_mouse_y(0)&lt;global.wys*4.5+((1+_i_id_stawki) div 2*global.wys*0.75)*_polozenie
+        var _x,_x1,_x2,_y,_y1,_y2;
+        _x1=global.szer*1.5;
+        _x2=global.szer*5.5;
+        _y=((1+_i_id_stawki) *global.wys*0.75)-((1+objSystem.dane_stawka_max)/2 *global.wys*0.75);
+        _y1=_y+global.wys*4
+        _y2=_y+global.wys*4.5
+            if device_mouse_x(0)&gt;_x1 and device_mouse_x(0)&lt;_x2 and 
+                device_mouse_y(0)&gt;_y1 and device_mouse_y(0)&lt;_y2
                 {
-                    
+                    stawka=_i_id_stawki
                     with(obj_parent)
                     {
                         scrDane(other.dzien_teraz,RODZAJ_ZMIANY+3*other.rodzaj_zmiany,other._i_id_stawki)
-                        suma_godzin[other.stawka]=scrSuma_godzin(other.stawka)
-                        suma_godzin[other._i_id_stawki]=scrSuma_godzin(other._i_id_stawki)  
+                        suma_godzin[other.stawka]=scrSuma_godzin(other.stawka);
+                        suma_godzin[other.stawka_old]=scrSuma_godzin(other.stawka_old);
                     }
-                    stawka=_i_id_stawki
-                    
-                
-                _i_id_stawki=32
+                    //zapis defaultowo wybranej stawki(ostatnio wybrana stawka)
+                    ini_open("stawki.ini");
+                    objSystem.ostatnio_wybrana_stawka=stawka;
+                    ini_write_real("config","ostatnio_wybrana_stawka",objSystem.ostatnio_wybrana_stawka);
+                    ini_close();
+                    break;
+                //_i_id_stawki=32
                 }
         }
-        else _i_id_stawki=32
+        else break;//_i_id_stawki=32
     }
 wybor_stawki=0
 }
@@ -203,7 +212,7 @@ if device_mouse_check_button_released(0,mb_left)
                 }
                 show_debug_message("_i_podmiana:"+string(_i_podmiana))
             }
-            suma_godzin[0]=scrSuma_godzin(0)
+            suma_godzin[other.stawka]=scrSuma_godzin(other.stawka);
         }
         objSystem.interface=0
         instance_destroy()
@@ -264,11 +273,10 @@ case msg_wejscie:
             with(obj_parent)
             {
                 scrDane(dzien_teraz,WEJSCIE+3*other.rodzaj_zmiany,real(_czas_godz)+real(_czas_min)/60)
-                scrDane(dzien_teraz,RODZAJ_ZMIANY+3*other.rodzaj_zmiany,0)
+                scrDane(dzien_teraz,RODZAJ_ZMIANY+3*other.rodzaj_zmiany,other.stawka)
                 other.wejscie=scrWyswietl_czas(scrDane(other.dzien_teraz,WEJSCIE+3*other.rodzaj_zmiany,-2))
-                suma_godzin[0]=scrSuma_godzin(0)
+                suma_godzin[other.stawka]=scrSuma_godzin(other.stawka)
             }
-            
         }else
         show_message_async("!!!UWAGA!!!#BLEDNY FORMAT DATY")
         
@@ -297,9 +305,9 @@ case msg_wyjscie:
             with(obj_parent)
             {
                 scrDane(dzien_teraz,WYJSCIE+3*other.rodzaj_zmiany,real(_czas_godz)+real(_czas_min)/60)
-                scrDane(dzien_teraz,RODZAJ_ZMIANY+3*other.rodzaj_zmiany,0)
+                scrDane(dzien_teraz,RODZAJ_ZMIANY+3*other.rodzaj_zmiany,other.stawka)
                 other.wyjscie=scrWyswietl_czas(scrDane(other.dzien_teraz,WYJSCIE+3*other.rodzaj_zmiany,-2))
-                suma_godzin[0]=scrSuma_godzin(0)
+                suma_godzin[other.stawka]=scrSuma_godzin(other.stawka)
             }
         }else
         show_message_async("!!!UWAGA!!!#BLEDNY FORMAT DATY")
@@ -370,6 +378,11 @@ draw_text(global.szer*3.5,global.wys*3.25,wyjscie)
 draw_set_alpha(0.9)
 draw_set_color(c_silver)
 draw_rectangle(global.szer*1.5,global.wys*4,global.szer*5.5,global.wys*4.5,0)
+var _kolor=objSystem.dane_stawka[stawka,STAWKA_KOLOR];
+if (_kolor==C_NOONE) _kolor=c_silver;
+draw_set_color(_kolor);
+draw_rectangle(global.szer*1.5+global.szer/15,global.wys*4+global.szer/15,global.szer*5.5-global.szer/15,global.wys*4.5-global.szer/15,0)
+draw_set_color(c_black)
 draw_set_alpha(1)
 draw_set_font(foBig)
 draw_set_valign(fa_top);
@@ -425,28 +438,32 @@ var _i_id_stawki;
     draw_set_valign(fa_middle)
     draw_set_halign(fa_center)
 //--------------- wyswietlanie stawek
-var _polozenie;
 for (_i_id_stawki=0;_i_id_stawki&lt;32;_i_id_stawki++)
 {
-if _i_id_stawki mod 2 = 0 _polozenie=-1
-else _polozenie=1
     if objSystem.dane_stawka[_i_id_stawki,STAWKA_NAZWA]!=""
     {
-        draw_set_alpha(0.9)
-        draw_set_color(c_silver)
-        draw_rectangle(-global.szer*7+global.szer*7+global.szer*1.5,
-                        global.wys*4+((1+_i_id_stawki) div 2 *global.wys*0.75)*_polozenie,
-                        -global.szer*7+global.szer*7+global.szer*5.5,
-                        global.wys*4.5+((1+_i_id_stawki) div 2*global.wys*0.75)*_polozenie,0)
+    //objSystem.dane_stawka_max
+        var _x,_x1,_x2,_y,_y1,_y2;
+        _x1=global.szer*1.5;
+        _x2=global.szer*5.5;
+        _y=((1+_i_id_stawki) *global.wys*0.75)-((1+objSystem.dane_stawka_max)/2 *global.wys*0.75);
+        _y1=_y+global.wys*4
+        _y2=_y+global.wys*4.5
         
+        draw_set_alpha(0.9)
+        var _kolor=objSystem.dane_stawka[_i_id_stawki,STAWKA_KOLOR];
+        if (_kolor==c_black) _kolor=c_silver;
+        draw_set_color(_kolor)
+        draw_rectangle(_x1,_y1,_x2,_y2,0)
+        draw_rectangle(_x1,_y1,_x2,_y2,0)
+        draw_set_color(c_white)
+        draw_rectangle(_x1,_y1,_x2,_y2,1)
         draw_set_alpha(1)
         draw_set_color(c_black)
-        draw_text(-global.szer*7+global.szer*7+global.szer*3.5,global.wys*4.25+((1+_i_id_stawki) div 2*global.wys*0.75)*_polozenie,objSystem.dane_stawka[_i_id_stawki,STAWKA_NAZWA])
+        draw_text(global.szer*3.5,+_y+global.wys*4.25,
+            objSystem.dane_stawka[_i_id_stawki,STAWKA_NAZWA])
     }
-    else
-    {
-    _i_id_stawki=32
-    }
+    else break;
 }
 }
 </string>

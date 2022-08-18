@@ -184,10 +184,14 @@ for(_i_stawka=0;_i_stawka&lt;32;_i_stawka++)
     }
     else
     {
+        dane_stawka_max=_i_stawka;
         dane_stawka[_i_stawka,STAWKA_NAZWA]=""
-        _i_stawka=32
+        //_i_stawka=32
+        break;
     } 
 }
+
+ostatnio_wybrana_stawka=ini_read_real("config","ostatnio_wybrana_stawka",0);
 
 ini_close()
 </string>
@@ -598,7 +602,7 @@ if interface=3 and slide_x=1 and !instance_exists(objInterface3)
                         _obj.stawka=dane_stawka[_i_id_stawki,STAWKA_STAWKA]
                         _obj.kolor=dane_stawka[_i_id_stawki,STAWKA_KOLOR]
                         _obj.id_stawki=_i_id_stawki
-                        
+                        objSystem.dane_stawka_max=_i_id_stawki+1;
                         dane_stawka[_i_id_stawki+1,STAWKA_NAZWA]=""
                         _i_id_stawki=32
                     }

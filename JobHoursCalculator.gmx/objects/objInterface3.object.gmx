@@ -254,12 +254,15 @@ case msg_stawka:
     {
         var _stawka;
         _stawka=ds_map_find_value(async_load, "result")
-        if _stawka&lt;0
+        _stawka=string_replace(_stawka,",",".");
+        if (_stawka&lt;0)
         {
             show_message_async("!!!UWAGA!!!#STAWKA GODZINOWA NIE MOŻE BYĆ UJEMNA")
         }else
         {
-        stawka=_stawka
+        stawka=real(_stawka);
+        if (string(stawka)!=_stawka)
+            show_message_async("!!!UWAGA!!!#NAJPRWDOPODOBNIEJ STAWKA NIE ZOSTAŁA POPRAWNIE ZAPISANA");
         objSystem.dane_stawka[id_stawki, STAWKA_STAWKA]=stawka
             ini_open("stawki.ini")
             ini_write_string(id_stawki,STAWKA_NAZWA,nazwa)
